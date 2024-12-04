@@ -1,0 +1,12 @@
+<launch>
+
+   <include file="$(find taarn_basestation_bringup)/launch/include/ds_cap.launch"/>
+
+   <include file="$(find taarn_basestation_bringup)/launch/include/virtual_tether.launch"/>
+
+   <include file="$(find taarn_basestation_bringup)/launch/include/mallard.launch"/>
+
+   <include file="$(find taarn_basestation_bringup)/launch/include/bluerov.launch"/>
+
+</launch>
+

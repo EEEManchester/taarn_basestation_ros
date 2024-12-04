@@ -1,0 +1,4 @@
+<launch>
+    <include file="$(find taarn_teleop_joy)/launch/bluerov_teleop_joy.launch" />
+    <include file="$(find taarn_teleop_joy)/launch/mallard_teleop_joy.launch" />
+</launch>
