@@ -1,11 +1,11 @@
 axis_linear:
-  x: -1
-  y: -1
+  x: 1
+  y: 0
   depth_up: 5
   depth_down: 2
 scale_linear:
-  x: 0
-  y: 0
+  x: 1
+  y: -1
   depth_up: -0.5
   depth_down: -0.5
 offset_linear:
@@ -14,9 +14,9 @@ offset_linear:
   depth_up: -1
   depth_down: -1
 axis_angular:
-  yaw: -1
+  yaw: 3
 scale_angular:
-  yaw: 0
+  yaw: -1
 offset_angular:
   yaw: 0
-arming_button: -1
+arming_button: 9

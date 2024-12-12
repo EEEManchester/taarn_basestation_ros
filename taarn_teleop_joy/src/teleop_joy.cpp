@@ -45,7 +45,6 @@ namespace teleop_joy
 
         ros::Subscriber joy_sub;
         ros::Publisher cmd_vel_pub;
-        ros::Publisher twist_depth_pub;
         ros::ServiceClient arming_client;
 
         std::map<std::string, int> axis_linear_map;
@@ -120,10 +119,6 @@ namespace teleop_joy
         {
             pimpl_->cmd_vel_pub = nh->advertise<geometry_msgs::Twist>("cmd_vel", 1, true);
         }
-        if (pimpl_->depth_enabled)
-        {
-            pimpl_->twist_depth_pub = nh->advertise<geometry_msgs::Twist>("twist_depth", 1, true);
-        }
         if (pimpl_->arming_enabled)
         {
             pimpl_->arming_client = nh->serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
@@ -163,29 +158,22 @@ namespace teleop_joy
         geometry_msgs::Twist msg;
         msg.linear.x = getVal(joy_msg, axis_linear_map, scale_linear_map, offset_linear_map, "x");
         msg.linear.y = getVal(joy_msg, axis_linear_map, scale_linear_map, offset_linear_map, "y");
-        msg.linear.z = 0;
+        if (depth_enabled)
+        { 
+            double up = getVal(joy_msg, axis_linear_map, scale_linear_map, offset_linear_map, "depth_up");
+            double down = getVal(joy_msg, axis_linear_map, scale_linear_map, offset_linear_map, "depth_down");
+            msg.linear.z = up-down;
+        }
+        else
+        {
+            msg.linear.z = 0;
+        }
 
         msg.angular.x = 0;
         msg.angular.y = 0;
         msg.angular.z = getVal(joy_msg, axis_angular_map, scale_angular_map, offset_angular_map, "yaw");
 
         cmd_vel_pub.publish(msg);
-    }
-
-    void TeleopJoy::Impl::sendDepthTwistMsg(const sensor_msgs::Joy::ConstPtr &joy_msg)
-    {
-        double up = getVal(joy_msg, axis_linear_map, scale_linear_map, offset_linear_map, "depth_up");
-        double down = getVal(joy_msg, axis_linear_map, scale_linear_map, offset_linear_map, "depth_down");
-        geometry_msgs::Twist msg;
-        msg.linear.x = 0;
-        msg.linear.y = 0;
-        msg.linear.z = up - down;
-
-        msg.angular.y = 0;
-        msg.angular.z = 0;
-        msg.angular.x = 0;
-
-        twist_depth_pub.publish(msg);
     }
     
     void TeleopJoy::Impl::joyCallback(const sensor_msgs::Joy::ConstPtr &joy_msg)
@@ -205,10 +193,6 @@ namespace teleop_joy
         if (cmd_vel_enabled)
         {
             sendCmdVelMsg(joy_msg);
-        }
-        if (depth_enabled)
-        {
-            sendDepthTwistMsg(joy_msg);
         }
     }
 
