@@ -11,6 +11,4 @@
       <node pkg="joint_state_publisher" type="joint_state_publisher" name="joint_state_publisher"/>
    </group>
 
-    <include file="$(find mallard_teleop_joy)/launch/teleop_joy.launch" />
-
 </launch>

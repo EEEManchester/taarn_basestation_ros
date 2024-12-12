@@ -1,3 +1,0 @@
-<launch>
-    <include file="$(find bluerov_teleop_joy)/launch/teleop_joy.launch" />
-</launch>
