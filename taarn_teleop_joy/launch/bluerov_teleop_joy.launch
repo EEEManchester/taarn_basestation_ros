@@ -15,7 +15,7 @@
 
         <node pkg="taarn_teleop_joy" name="teleop_joy" type="teleop_node" output="screen">
             <rosparam command="load" file="$(find taarn_teleop_joy)/config/$(arg joy_config).config.yaml" />
-            <remap from="cmd_vel" to="twist"/>
+            <remap from="cmd_vel" to="teleop/cmd_vel"/>
         </node>
     </group>
 </launch>

@@ -26,6 +26,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 #include <map>
 
 #include "geometry_msgs/Twist.h"
+#include "std_srvs/SetBool.h"
 #include "ros/ros.h"
 #include "sensor_msgs/Joy.h"
 #include "teleop_joy/teleop_joy.h"
@@ -39,13 +40,18 @@ namespace teleop_joy
     struct TeleopJoy::Impl
     {
         void joyCallback(const sensor_msgs::Joy::ConstPtr &joy);
-        void sendArmDisarm(const bool arm);
+        void setArmDisarm(const bool arm);
+        void setDepthHoldEnable(const bool enable);
+        void setAttitudeControlEnable(const bool enable);
+        void sendDepthTargetMsg(int direction);
         void sendCmdVelMsg(const sensor_msgs::Joy::ConstPtr &joy_msg);
         void sendDepthTwistMsg(const sensor_msgs::Joy::ConstPtr &joy_msg);
 
         ros::Subscriber joy_sub;
         ros::Publisher cmd_vel_pub;
         ros::ServiceClient arming_client;
+        ros::ServiceClient depth_hold_client;
+        ros::ServiceClient attitude_control_client;
 
         std::map<std::string, int> axis_linear_map;
         std::map<std::string, double> scale_linear_map;
@@ -58,6 +64,14 @@ namespace teleop_joy
         int arming_button;
         bool armed = false;
         bool arming_button_released = true;
+
+        int depth_hold_button;
+        bool depth_hold_enabled = true;
+        bool depth_hold_button_released = true;
+
+        int attitude_control_button;
+        bool attitude_control_enabled = true;
+        bool attitude_control_button_released = true;
 
         bool depth_enabled = false;
         bool cmd_vel_enabled = false;
@@ -107,6 +121,14 @@ namespace teleop_joy
         {
             ROS_INFO_NAMED("teleop_joy", "Arming button %i.", pimpl_->arming_button);
         }
+        if (nh_param->param<int>("depth_hold_button", pimpl_->depth_hold_button, -1))
+        {
+            ROS_INFO_NAMED("teleop_joy", "Depth hold button %i.", pimpl_->depth_hold_button);
+        }
+        if (nh_param->param<int>("attitude_control_button", pimpl_->attitude_control_button, -1))
+        {
+            ROS_INFO_NAMED("teleop_joy", "Attitude control button %i.", pimpl_->attitude_control_button);
+        }
 
         pimpl_->cmd_vel_enabled = pimpl_->axis_linear_map.find("x") != pimpl_->axis_linear_map.end() && pimpl_->axis_linear_map.at("x") >= 0;
         pimpl_->depth_enabled = pimpl_->axis_linear_map.find("depth_up") != pimpl_->axis_linear_map.end() && pimpl_->axis_linear_map.at("depth_up") >= 0;
@@ -117,11 +139,16 @@ namespace teleop_joy
 
         if (pimpl_->cmd_vel_enabled)
         {
-            pimpl_->cmd_vel_pub = nh->advertise<geometry_msgs::Twist>("cmd_vel", 1, true);
+            pimpl_->cmd_vel_pub = nh->advertise<geometry_msgs::Twist>("cmd_vel", 1, false);
         }
         if (pimpl_->arming_enabled)
         {
             pimpl_->arming_client = nh->serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
+        }
+        pimpl_->attitude_control_client = nh->serviceClient<std_srvs::SetBool>("set_attitude_enabled");
+        if (pimpl_->depth_enabled)
+        {
+            pimpl_->depth_hold_client = nh->serviceClient<std_srvs::SetBool>("set_depth_hold_enabled");
         }
     }
 
@@ -138,7 +165,7 @@ namespace teleop_joy
         return (joy_msg->axes[axis_map.at(fieldname)] + offset_map.at(fieldname)) * scale_map.at(fieldname);
     }
 
-    void TeleopJoy::Impl::sendArmDisarm(const bool arm)
+    void TeleopJoy::Impl::setArmDisarm(const bool arm)
     {
         mavros_msgs::CommandBool arm_cmd;
         arm_cmd.request.value = arm;
@@ -150,6 +177,36 @@ namespace teleop_joy
         else
         {
             ROS_INFO_NAMED("teleop_joy", "Failed to %s vehicle.", arm ? "arm" : "disarm");
+        }
+    }
+
+    void TeleopJoy::Impl::setDepthHoldEnable(const bool enable)
+    {
+        std_srvs::SetBool enable_cmd;
+        enable_cmd.request.data = enable;
+        if (depth_hold_client.call(enable_cmd))
+        {
+            ROS_INFO_NAMED("teleop_joy", "Depth hold %s.", enable ? "enabled" : "disabled");
+            depth_hold_enabled = enable;
+        }
+        else
+        {
+            ROS_INFO_NAMED("teleop_joy", "Failed to %s depth hold.", enable ? "enable" : "disable");
+        }
+    }
+
+    void TeleopJoy::Impl::setAttitudeControlEnable(const bool enable)
+    {
+        std_srvs::SetBool enable_cmd;
+        enable_cmd.request.data = enable;
+        if (attitude_control_client.call(enable_cmd))
+        {
+            ROS_INFO_NAMED("teleop_joy", "Attitude control %s.", enable ? "enabled" : "disabled");
+            attitude_control_enabled = enable;
+        }
+        else
+        {
+            ROS_INFO_NAMED("teleop_joy", "Failed to %s attitude control.", enable ? "enable" : "disable");
         }
     }
 
@@ -178,7 +235,8 @@ namespace teleop_joy
     
     void TeleopJoy::Impl::joyCallback(const sensor_msgs::Joy::ConstPtr &joy_msg)
     {
-        if (arming_enabled >= 0 && joy_msg->buttons.size() > arming_button)
+        int n_button = joy_msg->buttons.size();
+        if (arming_enabled >= 0 && n_button > arming_button)
         {
             if ( joy_msg->buttons[arming_button] == 0)
             {
@@ -186,8 +244,32 @@ namespace teleop_joy
             }
             else if (arming_button_released)
             {
-                sendArmDisarm(!armed);
+                setArmDisarm(!armed);
                 arming_button_released = false;
+            }
+        }
+        if (depth_enabled && n_button > depth_hold_button)
+        {
+            if (joy_msg->buttons[depth_hold_button] == 0)
+            {
+                depth_hold_button_released = true;
+            }
+            else if (depth_hold_button_released)
+            {
+                setDepthHoldEnable(!depth_hold_enabled);
+                depth_hold_button_released = false;
+            }
+        }
+        if (n_button > attitude_control_button)
+        {
+            if (joy_msg->buttons[attitude_control_button] == 0)
+            {
+                attitude_control_button_released = true;
+            }
+            else if (attitude_control_button_released)
+            {
+                setAttitudeControlEnable(!attitude_control_enabled);
+                attitude_control_button_released = false;
             }
         }
         if (cmd_vel_enabled)

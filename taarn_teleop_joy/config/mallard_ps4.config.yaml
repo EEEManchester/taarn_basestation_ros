@@ -20,3 +20,4 @@ scale_angular:
 offset_angular:
   yaw: 0
 arming_button: 9
+attitude_control_button: 0
