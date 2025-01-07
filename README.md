@@ -19,14 +19,14 @@ roslaunch taarn_basestation_bringup basestation.launch
 ### Joystick mappings
 ```
 ==== Bluerov and Mallard ====
-joystick left horizontal:   linear x
-joystick left vertical:     linear y
-joystick right horizontal:  yaw
-options button:             arming/disarming
-cross button:               enable/disable attitude control
+Linear X:                   Left joystick horizontal
+LInear Y:                   Left joystick horizontal
+Yaw:                        Right joystick horizontal
+Arming/disarming:           Options button
+Attitude control on/off:    Cross button
 
 ==== Bluerov only ====
-trigger button right R2:    depth up
-trigger button left L2:     depth down
-circle button:              enable/disable depth hold
+Depth up:                   Right trigger button R2
+Depth down:                 Left trigger button L2
+Depth hold on/off:          Circl button
 ```
