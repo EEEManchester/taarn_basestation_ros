@@ -27,6 +27,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 
 #include "geometry_msgs/Twist.h"
 #include "std_srvs/SetBool.h"
+#include "std_srvs/Trigger.h"
 #include "ros/ros.h"
 #include "sensor_msgs/Joy.h"
 #include "teleop_joy/teleop_joy.h"
@@ -41,8 +42,8 @@ namespace teleop_joy
     {
         void joyCallback(const sensor_msgs::Joy::ConstPtr &joy);
         void setArmDisarm(const bool arm);
-        void setDepthHoldEnable(const bool enable);
-        void setAttitudeControlEnable(const bool enable);
+        void toggleDepthHold();
+        void toggleAttitudeControl();
         void sendDepthTargetMsg(int direction);
         void sendCmdVelMsg(const sensor_msgs::Joy::ConstPtr &joy_msg);
         void sendDepthTwistMsg(const sensor_msgs::Joy::ConstPtr &joy_msg);
@@ -145,10 +146,10 @@ namespace teleop_joy
         {
             pimpl_->arming_client = nh->serviceClient<mavros_msgs::CommandBool>("mavros/cmd/arming");
         }
-        pimpl_->attitude_control_client = nh->serviceClient<std_srvs::SetBool>("set_attitude_enabled");
+        pimpl_->attitude_control_client = nh->serviceClient<std_srvs::Trigger>("toggle_attitude_control");
         if (pimpl_->depth_enabled)
         {
-            pimpl_->depth_hold_client = nh->serviceClient<std_srvs::SetBool>("set_depth_hold_enabled");
+            pimpl_->depth_hold_client = nh->serviceClient<std_srvs::Trigger>("toggle_depth_hold");
         }
     }
 
@@ -180,33 +181,29 @@ namespace teleop_joy
         }
     }
 
-    void TeleopJoy::Impl::setDepthHoldEnable(const bool enable)
+    void TeleopJoy::Impl::toggleDepthHold()
     {
-        std_srvs::SetBool enable_cmd;
-        enable_cmd.request.data = enable;
-        if (depth_hold_client.call(enable_cmd))
+        std_srvs::Trigger trigger;
+        if (depth_hold_client.call(trigger))
         {
-            ROS_INFO_NAMED("teleop_joy", "Depth hold %s.", enable ? "enabled" : "disabled");
-            depth_hold_enabled = enable;
+            ROS_INFO_NAMED("teleop_joy", "Successfully toggle depth hold.");
         }
         else
         {
-            ROS_INFO_NAMED("teleop_joy", "Failed to %s depth hold.", enable ? "enable" : "disable");
+            ROS_INFO_NAMED("teleop_joy", "Failed to toggle depth hold.");
         }
     }
 
-    void TeleopJoy::Impl::setAttitudeControlEnable(const bool enable)
+    void TeleopJoy::Impl::toggleAttitudeControl()
     {
-        std_srvs::SetBool enable_cmd;
-        enable_cmd.request.data = enable;
-        if (attitude_control_client.call(enable_cmd))
+        std_srvs::Trigger trigger;
+        if (attitude_control_client.call(trigger))
         {
-            ROS_INFO_NAMED("teleop_joy", "Attitude control %s.", enable ? "enabled" : "disabled");
-            attitude_control_enabled = enable;
+            ROS_INFO_NAMED("teleop_joy", "Successfully toggle attitude control.");
         }
         else
         {
-            ROS_INFO_NAMED("teleop_joy", "Failed to %s attitude control.", enable ? "enable" : "disable");
+            ROS_INFO_NAMED("teleop_joy", "Failed to toggle attitude control.");
         }
     }
 
@@ -256,7 +253,7 @@ namespace teleop_joy
             }
             else if (depth_hold_button_released)
             {
-                setDepthHoldEnable(!depth_hold_enabled);
+                toggleDepthHold();
                 depth_hold_button_released = false;
             }
         }
@@ -268,7 +265,7 @@ namespace teleop_joy
             }
             else if (attitude_control_button_released)
             {
-                setAttitudeControlEnable(!attitude_control_enabled);
+                toggleAttitudeControl();
                 attitude_control_button_released = false;
             }
         }
