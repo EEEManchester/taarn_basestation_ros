@@ -2,8 +2,6 @@
 
    <include file="$(find taarn_basestation_bringup)/launch/include/ds_cap.launch"/>
 
-   <!-- <include file="$(find taarn_basestation_bringup)/launch/include/virtual_tether.launch"/> -->
-
    <include file="$(find taarn_teleop_joy)/launch/dual_teleop_joy.launch"/>
 
 </launch>
