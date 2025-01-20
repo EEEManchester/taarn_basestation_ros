@@ -1,6 +1,5 @@
 <launch>
-
-    <node name="ds_cap" pkg="xueliang_localisation" type="tilting_test.py" output="screen" />
-    <rosparam file="$(find taarn_basestation_bringup)/params/mallard_static.yaml" command="load" />
-
+    <node name="ds_cap" pkg="ds_cap" type="ds_cap.py" output="screen">
+        <rosparam file="$(find taarn_basestation_bringup)/params/ds_cap.yaml" command="load" />
+    </node>
 </launch>
