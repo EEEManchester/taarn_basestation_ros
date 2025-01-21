@@ -1,9 +1,9 @@
 # taarn_basestation_ros
 
 ## Dependencies
-- [Mallard](https://github.com/EEEManchester/MallARD/tree/ice9-dev) _ice9-dev_ branch
+- [MallARD](https://github.com/EEEManchester/MallARD/tree/ice9-dev) _ice9-dev_ branch
 
-Only ds_cap needs to be build. It is safe to delete all other packages or target the individual packages when building, e.g.:
+There are multiple packages in MallARD, but only ds_cap needs to be built. Target the individual packages when building, e.g.:
 ```
 catkin build ds_cap taarn_basestation_bringup taarn_teleop_joy
 ```
