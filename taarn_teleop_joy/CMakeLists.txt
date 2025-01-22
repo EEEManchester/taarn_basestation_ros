@@ -6,7 +6,7 @@ find_package(catkin REQUIRED COMPONENTS geometry_msgs roscpp sensor_msgs mavros)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS geometry_msgs roscpp sensor_msgs mavros
+  CATKIN_DEPENDS geometry_msgs roscpp sensor_msgs mavros_msgs
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS})

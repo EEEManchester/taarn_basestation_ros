@@ -1,11 +1,26 @@
 # taarn_basestation_ros
 
 ## Dependencies
+- [joy](https://github.com/ros-drivers/joystick_drivers)
+- [mavros_msgs](https://github.com/mavlink/mavros)
 - [MallARD](https://github.com/EEEManchester/MallARD/tree/ice9-dev) _ice9-dev_ branch
 
-There are multiple packages in MallARD, but only ds_cap needs to be built. Target the individual packages when building, e.g.:
+## Installation
+Make a new directory for your catkin workspace:
 ```
-catkin build ds_cap taarn_basestation_bringup taarn_teleop_joy
+mkdir -p ~/catkin_ws/src
+cd ~/catkin_ws/src
+```
+Clone the repository and dependencies:
+```
+git clone git@github.com:EEEManchester/taarn_basestation_ros.git
+git clone -b ice9-dev git@github.com:EEEManchester/MallARD.git
+```
+Install other dependencies and build:
+```
+cd ..
+rosdep install --from-paths src --ignore-src -r -y
+catkin build
 ```
 
 ## Use
@@ -14,7 +29,8 @@ Launch basestation
 roslaunch taarn_basestation_bringup basestation.launch
 ```
 
-### Joystick mappings
+## Teleop
+Joystick mappings:
 ```
 ==== Bluerov and Mallard ====
 Linear X:                   Left  joystick horizontal
@@ -28,3 +44,5 @@ Depth up:                   Right trigger button R2
 Depth down:                 Left  trigger button L2
 Depth hold on/off:          Circle  button
 ```
+
+For configure the joystick mappings and control gains, see [taarn_teleop_joy/README.md](taarn_teleop_joy/README.md).
