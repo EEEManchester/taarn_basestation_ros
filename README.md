@@ -45,4 +45,6 @@ Depth down:                 Left  trigger button L2
 Depth hold on/off:          Circle  button
 ```
 
-For configure the joystick mappings and control gains, see [taarn_teleop_joy/README.md](taarn_teleop_joy/README.md).
+To configure the joystick mappings and control gains, see [taarn_teleop_joy/README.md](taarn_teleop_joy/README.md).
+
+![mapping](joystick_mapping.jpg)
